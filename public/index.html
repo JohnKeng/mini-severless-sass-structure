@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>mini serverless sass strcture</title>
+    <style>
+        .wrap {
+            width: 500px;
+            margin: 0 auto;
+        }
+        #functionInputs {
+            margin-top: 10px;
+        }
+
+        #functionInputs > div {
+            margin-bottom: 10px;
+        }
+
+        #functionInputs > div > label {
+            display: inline-block;
+            width: 100px;
+        }
+
+        #functionInputs > div > textarea {
+            vertical-align: top;
+        }
+        button {
+            margin: 10px 0;
+        }
+        .right {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Dynamic Functions</h1>
+    <button onclick="addFunctionInput()">Add Function</button>
+    <button onclick="sendFunctions()">Submit</button>
+    <span class="right"> radio 為入口函數( Entry Point))</span>
+    <div id="functionInputs"></div>
+</div>
+
+
+    <script>
+        let functionCount = 0;
+
+        function addFunctionInput() {
+            functionCount++;
+            const inputDiv = document.createElement('div');
+
+            const label = document.createElement('label');
+            label.textContent = `function${functionCount}:`;
+            label.htmlFor = `function${functionCount}`;
+
+            const textarea = document.createElement('textarea');
+            textarea.id = `function${functionCount}`;
+            textarea.rows = 5;
+            textarea.cols = 50;
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'entryPoint';
+            radio.value = `function${functionCount}`;
+            if (functionCount === 1) {
+                radio.checked = true; // 自動選擇第一個函數作為入口
+            }
+
+            inputDiv.appendChild(label);
+            inputDiv.appendChild(textarea);
+            inputDiv.appendChild(radio);
+
+            document.getElementById('functionInputs').appendChild(inputDiv);
+        }
+
+        function sendFunctions() {
+            const functionList = {};
+            let entryPoint = '';
+
+            for (let i = 1; i <= functionCount; i++) {
+                const funcCode = document.getElementById(`function${i}`).value.trim();
+                if (funcCode) {
+                    functionList[`function${i}`] = funcCode;
+                    if (document.querySelector(`input[name="entryPoint"]:checked`).value === `function${i}`) {
+                        entryPoint = `function${i}`;
+                    }
+                }
+            }
+
+            fetch('/submit-function-list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ functionList: functionList, entryPoint: entryPoint }),
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch((error) => console.error('Error:', error));
+        }
+
+        // 初始化
+        addFunctionInput();
+    </script>
+</body>
+</html>
